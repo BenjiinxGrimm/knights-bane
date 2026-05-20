@@ -5,12 +5,18 @@ extends CharacterBody3D
 @export var max_hp: int = 5
 
 const GRAVITY := -20.0
-const ROTATION_SPEED := 10.0
-const STARTUP_TIME    := 0.10
-const ACTIVE_TIME     := 0.20
-const RECOVERY_TIME   := 0.30
-const FLASH_DURATION  := 0.15
+const STARTUP_TIME     := 0.10
+const ACTIVE_TIME      := 0.20
+const RECOVERY_TIME    := 0.30
+const FLASH_DURATION   := 0.15
 const IFRAMES_DURATION := 0.5
+const DODGE_SPEED      := 14.0
+const DODGE_DURATION   := 0.25
+const DODGE_COOLDOWN   := 0.7
+
+const COLOR_NORMAL := Color(0.55, 0.65, 0.85, 1)
+const COLOR_HIT    := Color(1, 0.3, 0.3, 1)
+const COLOR_DODGE  := Color(0.85, 0.92, 1.0, 1)
 
 enum AttackState { IDLE, STARTUP, ACTIVE, RECOVERY }
 
@@ -19,6 +25,10 @@ var _attack_state: AttackState = AttackState.IDLE
 var _attack_timer: float = 0.0
 var _flash_timer: float = 0.0
 var _iframes_timer: float = 0.0
+var _dodging: bool = false
+var _dodge_timer: float = 0.0
+var _dodge_cooldown: float = 0.0
+var _dodge_dir: Vector3 = Vector3.ZERO
 var _spawn_position: Vector3
 var _material: StandardMaterial3D
 
@@ -32,7 +42,7 @@ func _ready() -> void:
 	hp = max_hp
 	_spawn_position = global_position
 	_material = StandardMaterial3D.new()
-	_material.albedo_color = Color(0.55, 0.65, 0.85, 1)
+	_material.albedo_color = COLOR_NORMAL
 	_mesh.set_surface_override_material(0, _material)
 
 func take_damage(amount: int) -> void:
@@ -41,7 +51,6 @@ func take_damage(amount: int) -> void:
 	hp -= amount
 	_iframes_timer = IFRAMES_DURATION
 	_flash_timer = FLASH_DURATION
-	_material.albedo_color = Color(1, 0.3, 0.3, 1)
 	print("Player HP: ", hp)
 	if hp <= 0:
 		_respawn()
@@ -50,46 +59,87 @@ func _respawn() -> void:
 	hp = max_hp
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
+	_dodging = false
+	_attack_state = AttackState.IDLE
+	_hitbox_mesh.visible = false
 	print("You died — respawning")
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("attack") and _attack_state == AttackState.IDLE:
+	if event.is_action_pressed("dodge") and _dodge_cooldown <= 0.0 and not _dodging:
+		if _attack_state != AttackState.ACTIVE:
+			_start_dodge()
+	if event.is_action_pressed("attack") and _attack_state == AttackState.IDLE and not _dodging:
 		_attack_state = AttackState.STARTUP
 		_attack_timer = STARTUP_TIME
 
-func _physics_process(delta: float) -> void:
-	_tick_attack(delta)
-	_tick_timers(delta)
-
+func _start_dodge() -> void:
 	var input_dir := Vector2(
 		Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_up", "move_down")
 	)
-	if input_dir.length_squared() > 1.0:
-		input_dir = input_dir.normalized()
+	if input_dir.length_squared() > 0.01:
+		_dodge_dir = Vector3(input_dir.x, 0.0, input_dir.y).normalized()
+	else:
+		# No input — dodge backward away from facing direction
+		_dodge_dir = transform.basis.z.normalized()
+	_attack_state = AttackState.IDLE
+	_hitbox_mesh.visible = false
+	_dodging = true
+	_dodge_timer = DODGE_DURATION
+	_iframes_timer = DODGE_DURATION
 
-	var direction := Vector3(input_dir.x, 0.0, input_dir.y)
-	var speed_mult := 1.0
-	if _attack_state == AttackState.STARTUP or _attack_state == AttackState.ACTIVE:
-		speed_mult = attack_move_penalty
+func _physics_process(delta: float) -> void:
+	_tick_attack(delta)
+	_tick_dodge(delta)
+	_tick_timers(delta)
 
-	velocity.x = direction.x * move_speed * speed_mult
-	velocity.z = direction.z * move_speed * speed_mult
+	if _dodging:
+		velocity.x = _dodge_dir.x * DODGE_SPEED
+		velocity.z = _dodge_dir.z * DODGE_SPEED
+	else:
+		var input_dir := Vector2(
+			Input.get_axis("move_left", "move_right"),
+			Input.get_axis("move_up", "move_down")
+		)
+		if input_dir.length_squared() > 1.0:
+			input_dir = input_dir.normalized()
+		var direction := Vector3(input_dir.x, 0.0, input_dir.y)
+		var speed_mult := 1.0
+		if _attack_state == AttackState.STARTUP or _attack_state == AttackState.ACTIVE:
+			speed_mult = attack_move_penalty
+		velocity.x = direction.x * move_speed * speed_mult
+		velocity.z = direction.z * move_speed * speed_mult
 
-	if _attack_state != AttackState.ACTIVE:
+	if not _dodging and _attack_state != AttackState.ACTIVE:
 		_rotate_toward_mouse()
 
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
 	move_and_slide()
 
+func _tick_dodge(delta: float) -> void:
+	if _dodge_cooldown > 0.0:
+		_dodge_cooldown -= delta
+	if not _dodging:
+		return
+	_dodge_timer -= delta
+	if _dodge_timer <= 0.0:
+		_dodging = false
+		_dodge_cooldown = DODGE_COOLDOWN
+
 func _tick_timers(delta: float) -> void:
 	if _iframes_timer > 0.0:
 		_iframes_timer -= delta
 	if _flash_timer > 0.0:
 		_flash_timer -= delta
-		if _flash_timer <= 0.0:
-			_material.albedo_color = Color(0.55, 0.65, 0.85, 1)
+
+	# Colour priority: dodge > hit flash > normal
+	if _dodging:
+		_material.albedo_color = COLOR_DODGE
+	elif _flash_timer > 0.0:
+		_material.albedo_color = COLOR_HIT
+	else:
+		_material.albedo_color = COLOR_NORMAL
 
 func _tick_attack(delta: float) -> void:
 	if _attack_state == AttackState.IDLE:
