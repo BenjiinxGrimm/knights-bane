@@ -1,9 +1,13 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3 uid="uid://5gaeho1uxxnh"]
 
-[ext_resource type="Script" path="res://scripts/player.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/camera_follow.gd" id="2"]
+[ext_resource type="Script" uid="uid://c3x6rslqhellm" path="res://scripts/player.gd" id="1"]
+[ext_resource type="Script" uid="uid://hfqdph5pjyg4" path="res://scripts/camera_follow.gd" id="2"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0wfyh"]
+metallic = 1.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
+material = SubResource("StandardMaterial3D_0wfyh")
 size = Vector3(20, 0.5, 20)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
@@ -13,31 +17,48 @@ size = Vector3(20, 0.5, 20)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 
-[node name="Main" type="Node3D"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(0.8, 0.6, 0.5)
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.8, 0.6, 0.5)
+
+[node name="Main" type="Node3D" unique_id=494362524]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=943101576]
 transform = Transform3D(1, 0, 0, 0, 0.7071, -0.7071, 0, 0.7071, 0.7071, 0, 10, 0)
 shadow_enabled = true
 
-[node name="Ground" type="StaticBody3D" parent="."]
+[node name="Ground" type="StaticBody3D" parent="." unique_id=1227364988]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+[node name="Mesh" type="MeshInstance3D" parent="Ground" unique_id=1812899245]
 mesh = SubResource("BoxMesh_1")
 
-[node name="Collision" type="CollisionShape3D" parent="Ground"]
+[node name="Collision" type="CollisionShape3D" parent="Ground" unique_id=1413531445]
 shape = SubResource("BoxShape3D_1")
 
-[node name="Player" type="CharacterBody3D" parent="."]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1336336453]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 script = ExtResource("1")
 
-[node name="Mesh" type="MeshInstance3D" parent="Player"]
+[node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=516597948]
 mesh = SubResource("CapsuleMesh_1")
 
-[node name="Collision" type="CollisionShape3D" parent="Player"]
+[node name="Collision" type="CollisionShape3D" parent="Player" unique_id=54679801]
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="AttackHitbox" type="Area3D" parent="Player" unique_id=100000001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -0.7)
+monitoring = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player/AttackHitbox" unique_id=100000002]
+shape = SubResource("BoxShape3D_2")
+
+[node name="DebugMesh" type="MeshInstance3D" parent="Player/AttackHitbox" unique_id=100000003]
+visible = false
+mesh = SubResource("BoxMesh_2")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1189174466 node_paths=PackedStringArray("target")]
 script = ExtResource("2")
 target = NodePath("../Player")
