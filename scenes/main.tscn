@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c3x6rslqhellm" path="res://scripts/player.gd" id="1"]
 [ext_resource type="Script" uid="uid://hfqdph5pjyg4" path="res://scripts/camera_follow.gd" id="2"]
+[ext_resource type="Script" uid="uid://dv5p2xkr8mn4q" path="res://scripts/enemy.gd" id="3"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0wfyh"]
 metallic = 1.0
@@ -22,6 +23,12 @@ size = Vector3(0.8, 0.6, 0.5)
 
 [sub_resource type="BoxMesh" id="BoxMesh_2"]
 size = Vector3(0.8, 0.6, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy"]
+albedo_color = Color(0.8, 0.15, 0.15, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_2"]
+material = SubResource("StandardMaterial3D_enemy")
 
 [node name="Main" type="Node3D" unique_id=494362524]
 
@@ -58,6 +65,17 @@ shape = SubResource("BoxShape3D_2")
 [node name="DebugMesh" type="MeshInstance3D" parent="Player/AttackHitbox" unique_id=100000003]
 visible = false
 mesh = SubResource("BoxMesh_2")
+
+[node name="Enemy" type="CharacterBody3D" parent="." unique_id=200000001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -4)
+groups = ["enemy"]
+script = ExtResource("3")
+
+[node name="Mesh" type="MeshInstance3D" parent="Enemy" unique_id=200000002]
+mesh = SubResource("CapsuleMesh_2")
+
+[node name="Collision" type="CollisionShape3D" parent="Enemy" unique_id=200000003]
+shape = SubResource("CapsuleShape3D_1")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1189174466 node_paths=PackedStringArray("target")]
 script = ExtResource("2")

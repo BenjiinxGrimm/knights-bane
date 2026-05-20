@@ -97,5 +97,6 @@ func _rotate_toward_mouse(_delta: float) -> void:
 		rotation.y = atan2(-look_dir.x, -look_dir.z)
 
 func _on_hitbox_body_entered(body: Node3D) -> void:
-	if body.is_in_group("enemy"):
-		print("Hit enemy: ", body.name)
+	if body.is_in_group("enemy") and body.has_method("take_damage"):
+		var knock_dir := (body.global_position - global_position).normalized()
+		body.call("take_damage", 1, knock_dir)
