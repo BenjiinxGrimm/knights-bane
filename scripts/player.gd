@@ -9,6 +9,7 @@ extends CharacterBody3D
 @export var sprint_speed_mult: float = 1.6
 @export var sprint_drain_rate: float = 20.0
 @export var sprint_min_stamina: float = 20.0
+@export var dodge_stamina_cost: float = 25.0
 # Attack stamina costs go here once attack types are designed
 
 const GRAVITY := -20.0
@@ -79,7 +80,7 @@ func _respawn() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("dodge") and _dodge_cooldown <= 0.0 and not _dodging:
-		if _attack_state != AttackState.ACTIVE:
+		if _attack_state != AttackState.ACTIVE and stamina >= dodge_stamina_cost:
 			_start_dodge()
 	if event.is_action_pressed("attack") and _attack_state == AttackState.IDLE and not _dodging:
 		_attack_state = AttackState.STARTUP
@@ -96,6 +97,7 @@ func _start_dodge() -> void:
 		_dodge_dir = transform.basis.z.normalized()
 	_attack_state = AttackState.IDLE
 	_hitbox_mesh.visible = false
+	_use_stamina(dodge_stamina_cost)
 	_dodging = true
 	_dodge_timer = DODGE_DURATION
 	_iframes_timer = DODGE_DURATION

@@ -3,15 +3,11 @@
 [ext_resource type="Script" uid="uid://c3x6rslqhellm" path="res://scripts/player.gd" id="1"]
 [ext_resource type="Script" uid="uid://hfqdph5pjyg4" path="res://scripts/camera_follow.gd" id="2"]
 [ext_resource type="Script" uid="uid://dte71e8bbv3wf" path="res://scripts/enemy.gd" id="3"]
-[ext_resource type="Script" uid="uid://benhudscript1" path="res://scripts/hud.gd" id="4"]
+[ext_resource type="Script" uid="uid://c3fxutou6vanx" path="res://scripts/hud.gd" id="4"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0wfyh"]
-albedo_color = Color(0.32, 0.30, 0.26, 1)
+albedo_color = Color(0.32, 0.3, 0.26, 1)
 roughness = 0.95
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
-albedo_color = Color(0.42, 0.38, 0.32, 1)
-roughness = 0.9
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
 material = SubResource("StandardMaterial3D_0wfyh")
@@ -19,20 +15,6 @@ size = Vector3(18, 0.5, 18)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(18, 0.5, 18)
-
-[sub_resource type="BoxMesh" id="BoxMesh_wall_ns"]
-material = SubResource("StandardMaterial3D_wall")
-size = Vector3(18, 2, 1)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns"]
-size = Vector3(18, 2, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_wall_ew"]
-material = SubResource("StandardMaterial3D_wall")
-size = Vector3(1, 2, 16)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew"]
-size = Vector3(1, 2, 16)
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
 
@@ -49,6 +31,24 @@ albedo_color = Color(0.8, 0.15, 0.15, 1)
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_2"]
 material = SubResource("StandardMaterial3D_enemy")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.42, 0.38, 0.32, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ns"]
+material = SubResource("StandardMaterial3D_wall")
+size = Vector3(18, 2, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns"]
+size = Vector3(18, 2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ew"]
+material = SubResource("StandardMaterial3D_wall")
+size = Vector3(1, 2, 16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew"]
+size = Vector3(1, 2, 16)
 
 [node name="Main" type="Node3D" unique_id=494362524]
 
@@ -107,7 +107,7 @@ mesh = SubResource("CapsuleMesh_2")
 shape = SubResource("CapsuleShape3D_1")
 
 [node name="WallNorth" type="StaticBody3D" parent="." unique_id=300000001]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -8.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -8.5)
 
 [node name="Mesh" type="MeshInstance3D" parent="WallNorth" unique_id=300000002]
 mesh = SubResource("BoxMesh_wall_ns")
@@ -116,7 +116,7 @@ mesh = SubResource("BoxMesh_wall_ns")
 shape = SubResource("BoxShape3D_wall_ns")
 
 [node name="WallSouth" type="StaticBody3D" parent="." unique_id=300000004]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 8.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 8.5)
 
 [node name="Mesh" type="MeshInstance3D" parent="WallSouth" unique_id=300000005]
 mesh = SubResource("BoxMesh_wall_ns")
@@ -125,7 +125,7 @@ mesh = SubResource("BoxMesh_wall_ns")
 shape = SubResource("BoxShape3D_wall_ns")
 
 [node name="WallEast" type="StaticBody3D" parent="." unique_id=300000007]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 1.0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.5, 1, 0)
 
 [node name="Mesh" type="MeshInstance3D" parent="WallEast" unique_id=300000008]
 mesh = SubResource("BoxMesh_wall_ew")
@@ -134,7 +134,7 @@ mesh = SubResource("BoxMesh_wall_ew")
 shape = SubResource("BoxShape3D_wall_ew")
 
 [node name="WallWest" type="StaticBody3D" parent="." unique_id=300000010]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 1.0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.5, 1, 0)
 
 [node name="Mesh" type="MeshInstance3D" parent="WallWest" unique_id=300000011]
 mesh = SubResource("BoxMesh_wall_ew")
