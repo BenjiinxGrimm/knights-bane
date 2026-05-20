@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c3x6rslqhellm" path="res://scripts/player.gd" id="1"]
 [ext_resource type="Script" uid="uid://hfqdph5pjyg4" path="res://scripts/camera_follow.gd" id="2"]
-[ext_resource type="Script" uid="uid://dv5p2xkr8mn4q" path="res://scripts/enemy.gd" id="3"]
+[ext_resource type="Script" uid="uid://dte71e8bbv3wf" path="res://scripts/enemy.gd" id="3"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0wfyh"]
 metallic = 1.0
@@ -66,9 +66,8 @@ shape = SubResource("BoxShape3D_2")
 visible = false
 mesh = SubResource("BoxMesh_2")
 
-[node name="Enemy" type="CharacterBody3D" parent="." unique_id=200000001]
+[node name="Enemy" type="CharacterBody3D" parent="." unique_id=200000001 groups=["enemy"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -4)
-groups = ["enemy"]
 script = ExtResource("3")
 
 [node name="Mesh" type="MeshInstance3D" parent="Enemy" unique_id=200000002]
