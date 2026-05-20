@@ -46,10 +46,9 @@ func _physics_process(delta: float) -> void:
 	velocity.x = direction.x * move_speed * speed_mult
 	velocity.z = direction.z * move_speed * speed_mult
 
-	# Lock facing direction during the active window so the swing commits
-	if _attack_state != AttackState.ACTIVE and direction.length_squared() > 0.01:
-		var target_angle := atan2(direction.x, direction.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, ROTATION_SPEED * delta)
+	# Lock facing during the active window so the swing commits to where you clicked
+	if _attack_state != AttackState.ACTIVE:
+		_rotate_toward_mouse(delta)
 
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
@@ -78,5 +77,25 @@ func _tick_attack(delta: float) -> void:
 		AttackState.RECOVERY:
 			_attack_state = AttackState.IDLE
 
+func _rotate_toward_mouse(_delta: float) -> void:
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	var mouse_pos := get_viewport().get_mouse_position()
+	var ray_origin := camera.project_ray_origin(mouse_pos)
+	var ray_dir := camera.project_ray_normal(mouse_pos)
+	# Intersect a horizontal plane at the player's Y so the ray always hits
+	if abs(ray_dir.y) < 0.001:
+		return
+	var t := (global_position.y - ray_origin.y) / ray_dir.y
+	if t < 0.0:
+		return
+	var world_point := ray_origin + ray_dir * t
+	var look_dir := world_point - global_position
+	look_dir.y = 0.0
+	if look_dir.length_squared() > 0.01:
+		rotation.y = atan2(-look_dir.x, -look_dir.z)
+
 func _on_hitbox_body_entered(body: Node3D) -> void:
-	print("Hit: ", body.name)
+	if body.is_in_group("enemy"):
+		print("Hit enemy: ", body.name)
