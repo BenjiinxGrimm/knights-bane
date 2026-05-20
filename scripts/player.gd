@@ -3,6 +3,13 @@ extends CharacterBody3D
 @export var move_speed: float = 5.0
 @export var attack_move_penalty: float = 0.4
 @export var max_hp: int = 5
+@export var max_stamina: float = 100.0
+@export var stamina_regen_rate: float = 25.0
+@export var stamina_regen_delay: float = 0.8
+@export var sprint_speed_mult: float = 1.6
+@export var sprint_drain_rate: float = 20.0
+@export var sprint_min_stamina: float = 20.0
+# Attack stamina costs go here once attack types are designed
 
 const GRAVITY := -20.0
 const STARTUP_TIME     := 0.10
@@ -21,6 +28,7 @@ const COLOR_DODGE  := Color(0.85, 0.92, 1.0, 1)
 enum AttackState { IDLE, STARTUP, ACTIVE, RECOVERY }
 
 var hp: int
+var stamina: float
 var _attack_state: AttackState = AttackState.IDLE
 var _attack_timer: float = 0.0
 var _flash_timer: float = 0.0
@@ -29,6 +37,8 @@ var _dodging: bool = false
 var _dodge_timer: float = 0.0
 var _dodge_cooldown: float = 0.0
 var _dodge_dir: Vector3 = Vector3.ZERO
+var _sprinting: bool = false
+var _stamina_regen_timer: float = 0.0
 var _spawn_position: Vector3
 var _material: StandardMaterial3D
 
@@ -40,6 +50,7 @@ var _material: StandardMaterial3D
 func _ready() -> void:
 	add_to_group("player")
 	hp = max_hp
+	stamina = max_stamina
 	_spawn_position = global_position
 	_material = StandardMaterial3D.new()
 	_material.albedo_color = COLOR_NORMAL
@@ -57,9 +68,11 @@ func take_damage(amount: int) -> void:
 
 func _respawn() -> void:
 	hp = max_hp
+	stamina = max_stamina
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
 	_dodging = false
+	_sprinting = false
 	_attack_state = AttackState.IDLE
 	_hitbox_mesh.visible = false
 	print("You died — respawning")
@@ -80,7 +93,6 @@ func _start_dodge() -> void:
 	if input_dir.length_squared() > 0.01:
 		_dodge_dir = Vector3(input_dir.x, 0.0, input_dir.y).normalized()
 	else:
-		# No input — dodge backward away from facing direction
 		_dodge_dir = transform.basis.z.normalized()
 	_attack_state = AttackState.IDLE
 	_hitbox_mesh.visible = false
@@ -91,6 +103,7 @@ func _start_dodge() -> void:
 func _physics_process(delta: float) -> void:
 	_tick_attack(delta)
 	_tick_dodge(delta)
+	_tick_stamina(delta)
 	_tick_timers(delta)
 
 	if _dodging:
@@ -104,9 +117,13 @@ func _physics_process(delta: float) -> void:
 		if input_dir.length_squared() > 1.0:
 			input_dir = input_dir.normalized()
 		var direction := Vector3(input_dir.x, 0.0, input_dir.y)
+
 		var speed_mult := 1.0
 		if _attack_state == AttackState.STARTUP or _attack_state == AttackState.ACTIVE:
 			speed_mult = attack_move_penalty
+		elif _sprinting:
+			speed_mult = sprint_speed_mult
+
 		velocity.x = direction.x * move_speed * speed_mult
 		velocity.z = direction.z * move_speed * speed_mult
 
@@ -116,6 +133,22 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
 	move_and_slide()
+
+func _tick_stamina(delta: float) -> void:
+	var moving := Vector2(velocity.x, velocity.z).length_squared() > 0.1
+	_sprinting = Input.is_action_pressed("sprint") and moving and stamina >= sprint_min_stamina and not _dodging
+
+	if _sprinting:
+		_use_stamina(sprint_drain_rate * delta)
+
+	if _stamina_regen_timer > 0.0:
+		_stamina_regen_timer -= delta
+	elif stamina < max_stamina:
+		stamina = minf(stamina + stamina_regen_rate * delta, max_stamina)
+
+func _use_stamina(amount: float) -> void:
+	stamina = maxf(stamina - amount, 0.0)
+	_stamina_regen_timer = stamina_regen_delay
 
 func _tick_dodge(delta: float) -> void:
 	if _dodge_cooldown > 0.0:
@@ -132,8 +165,6 @@ func _tick_timers(delta: float) -> void:
 		_iframes_timer -= delta
 	if _flash_timer > 0.0:
 		_flash_timer -= delta
-
-	# Colour priority: dodge > hit flash > normal
 	if _dodging:
 		_material.albedo_color = COLOR_DODGE
 	elif _flash_timer > 0.0:
