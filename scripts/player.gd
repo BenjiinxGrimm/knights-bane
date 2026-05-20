@@ -16,10 +16,8 @@ var _attack_state: AttackState = AttackState.IDLE
 var _attack_timer: float = 0.0
 
 @onready var _hitbox: Area3D = $AttackHitbox
+@onready var _hitbox_shape: CollisionShape3D = $AttackHitbox/CollisionShape3D
 @onready var _hitbox_mesh: MeshInstance3D = $AttackHitbox/DebugMesh
-
-func _ready() -> void:
-	_hitbox.body_entered.connect(_on_hitbox_body_entered)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("attack") and _attack_state == AttackState.IDLE:
@@ -46,9 +44,8 @@ func _physics_process(delta: float) -> void:
 	velocity.x = direction.x * move_speed * speed_mult
 	velocity.z = direction.z * move_speed * speed_mult
 
-	# Lock facing during the active window so the swing commits to where you clicked
 	if _attack_state != AttackState.ACTIVE:
-		_rotate_toward_mouse(delta)
+		_rotate_toward_mouse()
 
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
@@ -58,33 +55,44 @@ func _physics_process(delta: float) -> void:
 func _tick_attack(delta: float) -> void:
 	if _attack_state == AttackState.IDLE:
 		return
-
 	_attack_timer -= delta
 	if _attack_timer > 0.0:
 		return
-
 	match _attack_state:
 		AttackState.STARTUP:
 			_attack_state = AttackState.ACTIVE
 			_attack_timer = ACTIVE_TIME
-			_hitbox.monitoring = true
 			_hitbox_mesh.visible = true
+			_do_attack()
 		AttackState.ACTIVE:
 			_attack_state = AttackState.RECOVERY
 			_attack_timer = RECOVERY_TIME
-			_hitbox.monitoring = false
 			_hitbox_mesh.visible = false
 		AttackState.RECOVERY:
 			_attack_state = AttackState.IDLE
 
-func _rotate_toward_mouse(_delta: float) -> void:
+func _do_attack() -> void:
+	var space := get_world_3d().direct_space_state
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = _hitbox_shape.shape
+	query.transform = _hitbox.global_transform
+	query.collision_mask = 1
+	query.exclude = [get_rid()]
+	for hit in space.intersect_shape(query, 8):
+		var body := hit["collider"] as Node3D
+		if body == null or not body.is_in_group("enemy"):
+			continue
+		if body.has_method("take_damage"):
+			var knock_dir := (body.global_position - global_position).normalized()
+			body.call("take_damage", 1, knock_dir)
+
+func _rotate_toward_mouse() -> void:
 	var camera := get_viewport().get_camera_3d()
 	if camera == null:
 		return
 	var mouse_pos := get_viewport().get_mouse_position()
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_dir := camera.project_ray_normal(mouse_pos)
-	# Intersect a horizontal plane at the player's Y so the ray always hits
 	if abs(ray_dir.y) < 0.001:
 		return
 	var t := (global_position.y - ray_origin.y) / ray_dir.y
@@ -95,8 +103,3 @@ func _rotate_toward_mouse(_delta: float) -> void:
 	look_dir.y = 0.0
 	if look_dir.length_squared() > 0.01:
 		rotation.y = atan2(-look_dir.x, -look_dir.z)
-
-func _on_hitbox_body_entered(body: Node3D) -> void:
-	if body.is_in_group("enemy") and body.has_method("take_damage"):
-		var knock_dir := (body.global_position - global_position).normalized()
-		body.call("take_damage", 1, knock_dir)
