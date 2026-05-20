@@ -2,22 +2,55 @@ extends CharacterBody3D
 
 @export var move_speed: float = 5.0
 @export var attack_move_penalty: float = 0.4
+@export var max_hp: int = 5
 
 const GRAVITY := -20.0
 const ROTATION_SPEED := 10.0
-
-const STARTUP_TIME  := 0.10
-const ACTIVE_TIME   := 0.20
-const RECOVERY_TIME := 0.30
+const STARTUP_TIME    := 0.10
+const ACTIVE_TIME     := 0.20
+const RECOVERY_TIME   := 0.30
+const FLASH_DURATION  := 0.15
+const IFRAMES_DURATION := 0.5
 
 enum AttackState { IDLE, STARTUP, ACTIVE, RECOVERY }
 
+var hp: int
 var _attack_state: AttackState = AttackState.IDLE
 var _attack_timer: float = 0.0
+var _flash_timer: float = 0.0
+var _iframes_timer: float = 0.0
+var _spawn_position: Vector3
+var _material: StandardMaterial3D
 
 @onready var _hitbox: Area3D = $AttackHitbox
 @onready var _hitbox_shape: CollisionShape3D = $AttackHitbox/CollisionShape3D
 @onready var _hitbox_mesh: MeshInstance3D = $AttackHitbox/DebugMesh
+@onready var _mesh: MeshInstance3D = $Mesh
+
+func _ready() -> void:
+	add_to_group("player")
+	hp = max_hp
+	_spawn_position = global_position
+	_material = StandardMaterial3D.new()
+	_material.albedo_color = Color(0.55, 0.65, 0.85, 1)
+	_mesh.set_surface_override_material(0, _material)
+
+func take_damage(amount: int) -> void:
+	if _iframes_timer > 0.0:
+		return
+	hp -= amount
+	_iframes_timer = IFRAMES_DURATION
+	_flash_timer = FLASH_DURATION
+	_material.albedo_color = Color(1, 0.3, 0.3, 1)
+	print("Player HP: ", hp)
+	if hp <= 0:
+		_respawn()
+
+func _respawn() -> void:
+	hp = max_hp
+	global_position = _spawn_position
+	velocity = Vector3.ZERO
+	print("You died — respawning")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("attack") and _attack_state == AttackState.IDLE:
@@ -26,17 +59,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	_tick_attack(delta)
+	_tick_timers(delta)
 
 	var input_dir := Vector2(
 		Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_up", "move_down")
 	)
-
 	if input_dir.length_squared() > 1.0:
 		input_dir = input_dir.normalized()
 
 	var direction := Vector3(input_dir.x, 0.0, input_dir.y)
-
 	var speed_mult := 1.0
 	if _attack_state == AttackState.STARTUP or _attack_state == AttackState.ACTIVE:
 		speed_mult = attack_move_penalty
@@ -49,8 +81,15 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
-
 	move_and_slide()
+
+func _tick_timers(delta: float) -> void:
+	if _iframes_timer > 0.0:
+		_iframes_timer -= delta
+	if _flash_timer > 0.0:
+		_flash_timer -= delta
+		if _flash_timer <= 0.0:
+			_material.albedo_color = Color(0.55, 0.65, 0.85, 1)
 
 func _tick_attack(delta: float) -> void:
 	if _attack_state == AttackState.IDLE:

@@ -76,6 +76,16 @@ mesh = SubResource("CapsuleMesh_2")
 [node name="Collision" type="CollisionShape3D" parent="Enemy" unique_id=200000003]
 shape = SubResource("CapsuleShape3D_1")
 
+[node name="Enemy2" type="CharacterBody3D" parent="." unique_id=200000004 groups=["enemy"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.5, -3)
+script = ExtResource("3")
+
+[node name="Mesh" type="MeshInstance3D" parent="Enemy2" unique_id=200000005]
+mesh = SubResource("CapsuleMesh_2")
+
+[node name="Collision" type="CollisionShape3D" parent="Enemy2" unique_id=200000006]
+shape = SubResource("CapsuleShape3D_1")
+
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1189174466 node_paths=PackedStringArray("target")]
 script = ExtResource("2")
 target = NodePath("../Player")
