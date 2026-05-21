@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://hfqdph5pjyg4" path="res://scripts/camera_follow.gd" id="2"]
 [ext_resource type="Script" uid="uid://dte71e8bbv3wf" path="res://scripts/enemy.gd" id="3"]
 [ext_resource type="Script" uid="uid://c3fxutou6vanx" path="res://scripts/hud.gd" id="4"]
+[ext_resource type="Script" uid="uid://ranged1abc567" path="res://scripts/ranged_enemy.gd" id="5"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0wfyh"]
 albedo_color = Color(0.32, 0.3, 0.26, 1)
@@ -31,6 +32,23 @@ albedo_color = Color(0.8, 0.15, 0.15, 1)
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_2"]
 material = SubResource("StandardMaterial3D_enemy")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ranged"]
+albedo_color = Color(0.9, 0.45, 0.1, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_ranged"]
+material = SubResource("StandardMaterial3D_ranged")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_weapon"]
+albedo_color = Color(0.25, 0.22, 0.28, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_weapon"]
+material = SubResource("StandardMaterial3D_weapon")
+size = Vector3(0.1, 0.1, 0.35)
+
+[sub_resource type="BoxMesh" id="BoxMesh_stick"]
+material = SubResource("StandardMaterial3D_weapon")
+size = Vector3(0.1, 0.1, 0.5)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_color = Color(0.42, 0.38, 0.32, 1)
@@ -96,6 +114,10 @@ mesh = SubResource("CapsuleMesh_2")
 [node name="Collision" type="CollisionShape3D" parent="Enemy" unique_id=200000003]
 shape = SubResource("CapsuleShape3D_1")
 
+[node name="WeaponMesh" type="MeshInstance3D" parent="Enemy" unique_id=600000001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.1, -0.35)
+mesh = SubResource("BoxMesh_stick")
+
 [node name="Enemy2" type="CharacterBody3D" parent="." unique_id=200000004 groups=["enemy"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.5, -3)
 script = ExtResource("3")
@@ -105,6 +127,10 @@ mesh = SubResource("CapsuleMesh_2")
 
 [node name="Collision" type="CollisionShape3D" parent="Enemy2" unique_id=200000006]
 shape = SubResource("CapsuleShape3D_1")
+
+[node name="WeaponMesh" type="MeshInstance3D" parent="Enemy2" unique_id=600000002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.1, -0.35)
+mesh = SubResource("BoxMesh_stick")
 
 [node name="WallNorth" type="StaticBody3D" parent="." unique_id=300000001]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -8.5)
@@ -141,6 +167,23 @@ mesh = SubResource("BoxMesh_wall_ew")
 
 [node name="Collision" type="CollisionShape3D" parent="WallWest" unique_id=300000012]
 shape = SubResource("BoxShape3D_wall_ew")
+
+[node name="RangedEnemy" type="CharacterBody3D" parent="." unique_id=500000001 groups=["enemy"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1.5, 4)
+script = ExtResource("5")
+
+[node name="Mesh" type="MeshInstance3D" parent="RangedEnemy" unique_id=500000002]
+mesh = SubResource("CapsuleMesh_ranged")
+
+[node name="Collision" type="CollisionShape3D" parent="RangedEnemy" unique_id=500000003]
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="WeaponMesh" type="MeshInstance3D" parent="RangedEnemy" unique_id=500000004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.1, -0.3)
+mesh = SubResource("BoxMesh_weapon")
+
+[node name="ProjectileSpawn" type="Marker3D" parent="RangedEnemy" unique_id=500000005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.7)
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=400000001]
 script = ExtResource("4")

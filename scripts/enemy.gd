@@ -10,12 +10,15 @@ const GRAVITY := -20.0
 const KNOCKBACK_DECAY := 12.0
 const FLASH_DURATION := 0.1
 const ATTACK_RANGE := 1.5
+const SEPARATION_RADIUS := 1.8
+const SEPARATION_STRENGTH := 1.5
 
 var hp: int
 var _player: Node3D = null
 var _knockback := Vector3.ZERO
 var _flash_timer: float = 0.0
 var _damage_timer: float = 0.0
+var _approach_angle_offset: float = 0.0
 var _material: StandardMaterial3D
 
 @onready var _mesh: MeshInstance3D = $Mesh
@@ -23,6 +26,7 @@ var _material: StandardMaterial3D
 func _ready() -> void:
 	add_to_group("enemy")
 	hp = max_hp
+	_approach_angle_offset = randf_range(-0.5, 0.5)
 	_material = _mesh.get_active_material(0).duplicate()
 	_mesh.set_surface_override_material(0, _material)
 
@@ -39,7 +43,10 @@ func _physics_process(delta: float) -> void:
 		var dist := to_player.length()
 
 		if dist > ATTACK_RANGE:
-			var dir := to_player / dist
+			var dir := (to_player / dist).rotated(Vector3.UP, _approach_angle_offset)
+			dir += _separation_from_others()
+			if dir.length_squared() > 0.001:
+				dir = dir.normalized()
 			velocity.x = dir.x * move_speed + _knockback.x
 			velocity.z = dir.z * move_speed + _knockback.z
 		else:
@@ -60,6 +67,19 @@ func _physics_process(delta: float) -> void:
 		_flash_timer -= delta
 		if _flash_timer <= 0.0:
 			_material.albedo_color = Color(0.8, 0.15, 0.15, 1)
+
+func _separation_from_others() -> Vector3:
+	var sep := Vector3.ZERO
+	for other in get_tree().get_nodes_in_group("enemy"):
+		var other_node := other as Node3D
+		if other_node == null or other_node == self:
+			continue
+		var away := global_position - other_node.global_position
+		away.y = 0.0
+		var d := away.length()
+		if d < SEPARATION_RADIUS and d > 0.001:
+			sep += away.normalized() * (1.0 - d / SEPARATION_RADIUS)
+	return sep * SEPARATION_STRENGTH
 
 func take_damage(amount: int, from_direction: Vector3) -> void:
 	hp -= amount
