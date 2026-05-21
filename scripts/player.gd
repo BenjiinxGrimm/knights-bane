@@ -22,6 +22,8 @@ const DODGE_SPEED      := 14.0
 const DODGE_DURATION   := 0.25
 const DODGE_COOLDOWN   := 0.7
 
+const HIT_PARTICLES = preload("res://scenes/hit_particles.tscn")
+
 const COLOR_NORMAL := Color(0.55, 0.65, 0.85, 1)
 const COLOR_HIT    := Color(1, 0.3, 0.3, 1)
 const COLOR_DODGE  := Color(0.85, 0.92, 1.0, 1)
@@ -63,7 +65,10 @@ func take_damage(amount: int) -> void:
 	hp -= amount
 	_iframes_timer = IFRAMES_DURATION
 	_flash_timer = FLASH_DURATION
-	print("Player HP: ", hp)
+	Effects.screenshake(0.35)
+	var hit := HIT_PARTICLES.instantiate() as CPUParticles3D
+	hit.position = global_position + Vector3(0, 0.5, 0)
+	get_tree().current_scene.add_child(hit)
 	if hp <= 0:
 		_respawn()
 

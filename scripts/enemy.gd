@@ -14,6 +14,9 @@ const ATTACK_COOLDOWN := 1.2
 const SEPARATION_RADIUS := 1.8
 const SEPARATION_STRENGTH := 1.5
 
+const HIT_PARTICLES   = preload("res://scenes/hit_particles.tscn")
+const DEATH_PARTICLES = preload("res://scenes/death_particles.tscn")
+
 const COLOR_NORMAL := Color(0.8, 0.15, 0.15, 1)
 const COLOR_WINDUP := Color(1.0, 0.65, 0.0, 1)
 const COLOR_HIT    := Color(1, 1, 1, 1)
@@ -130,9 +133,17 @@ func take_damage(amount: int, from_direction: Vector3) -> void:
 	hp -= amount
 	_material.albedo_color = COLOR_HIT
 	_flash_timer = FLASH_DURATION
+	Effects.hitstop(0.1)
+	Effects.screenshake(0.12)
+	var hit := HIT_PARTICLES.instantiate() as CPUParticles3D
+	hit.position = global_position + Vector3(0, 0.5, 0)
+	get_tree().current_scene.add_child(hit)
 	var knock_dir := from_direction
 	knock_dir.y = 0.0
 	if knock_dir.length_squared() > 0.001:
 		_knockback = knock_dir.normalized() * knockback_speed
 	if hp <= 0:
+		var death := DEATH_PARTICLES.instantiate() as CPUParticles3D
+		death.position = global_position + Vector3(0, 0.5, 0)
+		get_tree().current_scene.add_child(death)
 		queue_free()

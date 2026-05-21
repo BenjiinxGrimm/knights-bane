@@ -9,7 +9,9 @@ extends CharacterBody3D
 @export var cooldown_time: float = 2.5
 @export var knockback_speed: float = 6.0
 
-const PROJECTILE_SCENE = preload("res://scenes/projectile.tscn")
+const PROJECTILE_SCENE  = preload("res://scenes/projectile.tscn")
+const HIT_PARTICLES     = preload("res://scenes/hit_particles.tscn")
+const DEATH_PARTICLES   = preload("res://scenes/death_particles.tscn")
 const GRAVITY := -20.0
 const KNOCKBACK_DECAY := 12.0
 const FLASH_DURATION := 0.1
@@ -70,7 +72,7 @@ func _tick_state(delta: float) -> void:
 			if _state_timer <= 0.0:
 				_state = State.ROAM
 
-func _tick_movement(delta: float) -> void:
+func _tick_movement(_delta: float) -> void:
 	if _player == null:
 		velocity.x = _knockback.x
 		velocity.z = _knockback.z
@@ -122,9 +124,17 @@ func take_damage(amount: int, from_direction: Vector3) -> void:
 	hp -= amount
 	_material.albedo_color = COLOR_HIT
 	_flash_timer = FLASH_DURATION
+	Effects.hitstop(0.1)
+	Effects.screenshake(0.12)
+	var hit := HIT_PARTICLES.instantiate() as CPUParticles3D
+	hit.position = global_position + Vector3(0, 0.5, 0)
+	get_tree().current_scene.add_child(hit)
 	var knock_dir := from_direction
 	knock_dir.y = 0.0
 	if knock_dir.length_squared() > 0.001:
 		_knockback = knock_dir.normalized() * knockback_speed
 	if hp <= 0:
+		var death := DEATH_PARTICLES.instantiate() as CPUParticles3D
+		death.position = global_position + Vector3(0, 0.5, 0)
+		get_tree().current_scene.add_child(death)
 		queue_free()

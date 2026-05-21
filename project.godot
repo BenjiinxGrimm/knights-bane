@@ -16,6 +16,10 @@ config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 config/main_scene="res://scenes/main.tscn"
 
+[autoload]
+
+Effects="*res://scripts/effects.gd"
+
 [input]
 
 move_up={
