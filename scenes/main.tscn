@@ -2,9 +2,10 @@
 
 [ext_resource type="Script" uid="uid://c3x6rslqhellm" path="res://scripts/player.gd" id="1"]
 [ext_resource type="Script" uid="uid://hfqdph5pjyg4" path="res://scripts/camera_follow.gd" id="2"]
+[ext_resource type="PackedScene" uid="uid://ca0yywxiai6wu" path="res://Characters/Assassin/assassin.glb" id="2_tefeu"]
 [ext_resource type="Script" uid="uid://dte71e8bbv3wf" path="res://scripts/enemy.gd" id="3"]
 [ext_resource type="Script" uid="uid://c3fxutou6vanx" path="res://scripts/hud.gd" id="4"]
-[ext_resource type="Script" uid="uid://ranged1abc567" path="res://scripts/ranged_enemy.gd" id="5"]
+[ext_resource type="Script" uid="uid://c61sliio7p3bt" path="res://scripts/ranged_enemy.gd" id="5"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0wfyh"]
 albedo_color = Color(0.32, 0.3, 0.26, 1)
@@ -16,8 +17,6 @@ size = Vector3(18, 0.5, 18)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(18, 0.5, 18)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 
@@ -33,18 +32,8 @@ albedo_color = Color(0.8, 0.15, 0.15, 1)
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_2"]
 material = SubResource("StandardMaterial3D_enemy")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ranged"]
-albedo_color = Color(0.9, 0.45, 0.1, 1)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_ranged"]
-material = SubResource("StandardMaterial3D_ranged")
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_weapon"]
 albedo_color = Color(0.25, 0.22, 0.28, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_weapon"]
-material = SubResource("StandardMaterial3D_weapon")
-size = Vector3(0.1, 0.1, 0.35)
 
 [sub_resource type="BoxMesh" id="BoxMesh_stick"]
 material = SubResource("StandardMaterial3D_weapon")
@@ -68,11 +57,27 @@ size = Vector3(1, 2, 16)
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew"]
 size = Vector3(1, 2, 16)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ranged"]
+albedo_color = Color(0.9, 0.45, 0.1, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_ranged"]
+material = SubResource("StandardMaterial3D_ranged")
+
+[sub_resource type="BoxMesh" id="BoxMesh_weapon"]
+material = SubResource("StandardMaterial3D_weapon")
+size = Vector3(0.1, 0.1, 0.35)
+
 [node name="Main" type="Node3D" unique_id=494362524]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=943101576]
 transform = Transform3D(1, 0, 0, 0, 0.7071, -0.7071, 0, 0.7071, 0.7071, 0, 10, 0)
+light_energy = 2.5
 shadow_enabled = true
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="." unique_id=943101577]
+transform = Transform3D(-1, 0, 0, 0, 0.7071, 0.7071, 0, 0.7071, -0.7071, 0, 10, 0)
+light_energy = 1.0
+shadow_enabled = false
 
 [node name="Ground" type="StaticBody3D" parent="." unique_id=1227364988]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
@@ -83,12 +88,10 @@ mesh = SubResource("BoxMesh_1")
 [node name="Collision" type="CollisionShape3D" parent="Ground" unique_id=1413531445]
 shape = SubResource("BoxShape3D_1")
 
-[node name="Player" type="CharacterBody3D" parent="." unique_id=1336336453]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1336336453 node_paths=PackedStringArray("anim_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 script = ExtResource("1")
-
-[node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=516597948]
-mesh = SubResource("CapsuleMesh_1")
+anim_player = NodePath("assassin/AnimationPlayer")
 
 [node name="Collision" type="CollisionShape3D" parent="Player" unique_id=54679801]
 shape = SubResource("CapsuleShape3D_1")
@@ -103,6 +106,46 @@ shape = SubResource("BoxShape3D_2")
 [node name="DebugMesh" type="MeshInstance3D" parent="Player/AttackHitbox" unique_id=100000003]
 visible = false
 mesh = SubResource("BoxMesh_2")
+
+[node name="assassin" parent="Player" unique_id=1283826430 instance=ExtResource("2_tefeu")]
+transform = Transform3D(-50, 0, -4.371139e-06, 0, 50, 0, 4.371139e-06, 0, -50, 0, -1.5, 0)
+
+[node name="Skeleton3D" parent="Player/assassin/Armature" parent_id_path=PackedInt32Array(1283826430, 2053108629) index="0" unique_id=1876334420]
+bones/0/position = Vector3(0.014310749, -0.056931227, -1.8154755)
+bones/0/rotation = Quaternion(-0.66912633, -0.099475086, 0.09257135, 0.7306197)
+bones/1/rotation = Quaternion(0.22421262, 0.03785654, 0.004459464, 0.9737946)
+bones/2/rotation = Quaternion(0.032192707, 0.010692896, -0.007526253, 0.9993962)
+bones/3/rotation = Quaternion(0.0321272, 0.011333191, -0.0075821374, 0.9993908)
+bones/4/rotation = Quaternion(-0.13506676, 0.012402058, 0.018427305, 0.99058753)
+bones/5/rotation = Quaternion(-0.1242473, 0.06421475, -0.036874983, 0.98948437)
+bones/7/rotation = Quaternion(0.5548411, 0.46987963, -0.32327202, 0.6056895)
+bones/8/rotation = Quaternion(0.62449944, -0.14532459, 0.2923525, 0.70951486)
+bones/9/rotation = Quaternion(-0.008291025, -0.054221813, 0.36815783, 0.92814386)
+bones/10/rotation = Quaternion(0.08823109, -0.14217487, 0.114038214, 0.9792839)
+bones/11/rotation = Quaternion(0.61204505, -0.08296976, -0.017444396, 0.7862649)
+bones/12/rotation = Quaternion(0.13257846, 0.06545535, -0.19041137, 0.9705061)
+bones/13/rotation = Quaternion(0.5870233, 0.10555063, 0.13095693, 0.7919046)
+bones/15/rotation = Quaternion(0.527327, -0.48264652, 0.22111215, 0.6633913)
+bones/16/rotation = Quaternion(0.5903619, 0.18702655, -0.34785846, 0.70390946)
+bones/17/rotation = Quaternion(-0.07061514, 0.11125532, -0.4818351, 0.8662971)
+bones/18/rotation = Quaternion(0.041792303, 0.16128837, -0.15265152, 0.974134)
+bones/19/rotation = Quaternion(-0.1765393, 0.8713586, 0.21088204, -0.40632123)
+bones/20/rotation = Quaternion(0.025740841, 0.049354605, 0.1201043, 0.9911996)
+bones/21/rotation = Quaternion(-0.61104095, -0.26945224, -0.5039228, 0.5478014)
+bones/23/rotation = Quaternion(0.057946917, 0.2809115, 0.95213634, -0.10567622)
+bones/24/rotation = Quaternion(-0.3191986, -0.03355262, -0.044784404, 0.94603425)
+bones/25/rotation = Quaternion(0.52171844, -0.16154888, 0.050312385, 0.83617014)
+bones/26/rotation = Quaternion(0.29044682, -0.051660594, 0.0033389367, 0.9554898)
+bones/28/rotation = Quaternion(-0.11047389, 0.09273892, 0.982009, 0.12187463)
+bones/29/rotation = Quaternion(-0.29414758, 0.051531762, 0.065758035, 0.95210165)
+bones/30/rotation = Quaternion(0.58910847, 0.22901888, 0.020307643, 0.7746542)
+bones/31/rotation = Quaternion(0.33776194, -0.018369623, 0.016716756, 0.94090384)
+
+[node name="Skeleton3D" parent="Player/assassin/Armature_001" parent_id_path=PackedInt32Array(1283826430, 1831100528) index="0" unique_id=1068473453]
+bones/7/rotation = Quaternion(0.49506387, 0.5048784, -0.49454042, 0.5054101)
+bones/11/rotation = Quaternion(-0.08831285, 0.012288661, -0.1372734, 0.98651206)
+bones/15/rotation = Quaternion(0.49408305, -0.50587547, 0.49562418, 0.5043101)
+bones/29/rotation = Quaternion(-0.02191064, -0.0014142332, 0.064475805, 0.99767774)
 
 [node name="Enemy" type="CharacterBody3D" parent="." unique_id=200000001 groups=["enemy"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -4)
@@ -191,3 +234,5 @@ script = ExtResource("4")
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1189174466 node_paths=PackedStringArray("target")]
 script = ExtResource("2")
 target = NodePath("../Player")
+
+[editable path="Player/assassin"]

@@ -10,27 +10,24 @@ extends CharacterBody3D
 @export var sprint_drain_rate: float = 20.0
 @export var sprint_min_stamina: float = 20.0
 @export var dodge_stamina_cost: float = 25.0
+@export var anim_player: AnimationPlayer
 
 const GRAVITY := -20.0
-const STARTUP_TIME     := 0.10
-const ACTIVE_TIME      := 0.20
-const RECOVERY_TIME    := 0.30
-const HEAVY_STARTUP    := 0.25
-const HEAVY_ACTIVE     := 0.20
-const HEAVY_RECOVERY   := 0.55
+const STARTUP_TIME       := 0.10
+const ACTIVE_TIME        := 0.20
+const RECOVERY_TIME      := 0.30
+const HEAVY_STARTUP      := 0.25
+const HEAVY_ACTIVE       := 0.20
+const HEAVY_RECOVERY     := 0.55
 const LIGHT_STAMINA_COST := 15.0
 const HEAVY_STAMINA_COST := 30.0
-const FLASH_DURATION   := 0.15
-const IFRAMES_DURATION := 0.5
-const DODGE_SPEED      := 14.0
-const DODGE_DURATION   := 0.25
-const DODGE_COOLDOWN   := 0.7
+const IFRAMES_DURATION   := 0.5
+const DODGE_SPEED        := 14.0
+const DODGE_DURATION     := 0.25
+const DODGE_COOLDOWN     := 0.7
 
 const HIT_PARTICLES = preload("res://scenes/hit_particles.tscn")
 
-const COLOR_NORMAL := Color(0.55, 0.65, 0.85, 1)
-const COLOR_HIT    := Color(1, 0.3, 0.3, 1)
-const COLOR_DODGE  := Color(0.85, 0.92, 1.0, 1)
 
 enum AttackState { IDLE, STARTUP, ACTIVE, RECOVERY }
 
@@ -38,7 +35,6 @@ var hp: int
 var stamina: float
 var _attack_state: AttackState = AttackState.IDLE
 var _attack_timer: float = 0.0
-var _flash_timer: float = 0.0
 var _iframes_timer: float = 0.0
 var _dodging: bool = false
 var _dodge_timer: float = 0.0
@@ -48,28 +44,22 @@ var _sprinting: bool = false
 var _stamina_regen_timer: float = 0.0
 var _is_heavy: bool = false
 var _spawn_position: Vector3
-var _material: StandardMaterial3D
 
 @onready var _hitbox: Area3D = $AttackHitbox
 @onready var _hitbox_shape: CollisionShape3D = $AttackHitbox/CollisionShape3D
 @onready var _hitbox_mesh: MeshInstance3D = $AttackHitbox/DebugMesh
-@onready var _mesh: MeshInstance3D = $Mesh
 
 func _ready() -> void:
 	add_to_group("player")
 	hp = max_hp
 	stamina = max_stamina
 	_spawn_position = global_position
-	_material = StandardMaterial3D.new()
-	_material.albedo_color = COLOR_NORMAL
-	_mesh.set_surface_override_material(0, _material)
 
 func take_damage(amount: int) -> void:
 	if _iframes_timer > 0.0:
 		return
 	hp -= amount
 	_iframes_timer = IFRAMES_DURATION
-	_flash_timer = FLASH_DURATION
 	Effects.screenshake(0.35)
 	var hit := HIT_PARTICLES.instantiate() as CPUParticles3D
 	hit.position = global_position + Vector3(0, 0.5, 0)
@@ -89,7 +79,6 @@ func _respawn() -> void:
 	_sprinting = false
 	_attack_state = AttackState.IDLE
 	_hitbox_mesh.visible = false
-	print("You died — respawning")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("dodge") and _dodge_cooldown <= 0.0 and not _dodging:
@@ -132,6 +121,7 @@ func _physics_process(delta: float) -> void:
 	_tick_dodge(delta)
 	_tick_stamina(delta)
 	_tick_timers(delta)
+	_update_animation()
 
 	if _dodging:
 		velocity.x = _dodge_dir.x * DODGE_SPEED
@@ -161,13 +151,26 @@ func _physics_process(delta: float) -> void:
 		velocity.y += GRAVITY * delta
 	move_and_slide()
 
+func _update_animation() -> void:
+	if anim_player == null:
+		return
+	var anim: String
+	if _dodging:
+		anim = "dodge_roll"
+	elif _attack_state != AttackState.IDLE:
+		anim = "attack_heavy" if _is_heavy else "attack_light"
+	elif Vector2(velocity.x, velocity.z).length() > 0.5:
+		anim = "run" if _sprinting else "walk"
+	else:
+		anim = "idle"
+	if anim_player.current_animation != anim:
+		anim_player.play(anim)
+
 func _tick_stamina(delta: float) -> void:
 	var moving := Vector2(velocity.x, velocity.z).length_squared() > 0.1
 	_sprinting = Input.is_action_pressed("sprint") and moving and stamina >= sprint_min_stamina and not _dodging
-
 	if _sprinting:
 		_use_stamina(sprint_drain_rate * delta)
-
 	if _stamina_regen_timer > 0.0:
 		_stamina_regen_timer -= delta
 	elif stamina < max_stamina:
@@ -190,14 +193,6 @@ func _tick_dodge(delta: float) -> void:
 func _tick_timers(delta: float) -> void:
 	if _iframes_timer > 0.0:
 		_iframes_timer -= delta
-	if _flash_timer > 0.0:
-		_flash_timer -= delta
-	if _dodging:
-		_material.albedo_color = COLOR_DODGE
-	elif _flash_timer > 0.0:
-		_material.albedo_color = COLOR_HIT
-	else:
-		_material.albedo_color = COLOR_NORMAL
 
 func _tick_attack(delta: float) -> void:
 	if _attack_state == AttackState.IDLE:
