@@ -10,12 +10,16 @@ extends CharacterBody3D
 @export var sprint_drain_rate: float = 20.0
 @export var sprint_min_stamina: float = 20.0
 @export var dodge_stamina_cost: float = 25.0
-# Attack stamina costs go here once attack types are designed
 
 const GRAVITY := -20.0
 const STARTUP_TIME     := 0.10
 const ACTIVE_TIME      := 0.20
 const RECOVERY_TIME    := 0.30
+const HEAVY_STARTUP    := 0.25
+const HEAVY_ACTIVE     := 0.20
+const HEAVY_RECOVERY   := 0.55
+const LIGHT_STAMINA_COST := 15.0
+const HEAVY_STAMINA_COST := 30.0
 const FLASH_DURATION   := 0.15
 const IFRAMES_DURATION := 0.5
 const DODGE_SPEED      := 14.0
@@ -42,6 +46,7 @@ var _dodge_cooldown: float = 0.0
 var _dodge_dir: Vector3 = Vector3.ZERO
 var _sprinting: bool = false
 var _stamina_regen_timer: float = 0.0
+var _is_heavy: bool = false
 var _spawn_position: Vector3
 var _material: StandardMaterial3D
 
@@ -70,7 +75,10 @@ func take_damage(amount: int) -> void:
 	hit.position = global_position + Vector3(0, 0.5, 0)
 	get_tree().current_scene.add_child(hit)
 	if hp <= 0:
+		Audio.play_player_death()
 		_respawn()
+	else:
+		Audio.play_hit_player()
 
 func _respawn() -> void:
 	hp = max_hp
@@ -88,8 +96,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _attack_state != AttackState.ACTIVE and stamina >= dodge_stamina_cost:
 			_start_dodge()
 	if event.is_action_pressed("attack") and _attack_state == AttackState.IDLE and not _dodging:
-		_attack_state = AttackState.STARTUP
-		_attack_timer = STARTUP_TIME
+		if stamina >= LIGHT_STAMINA_COST:
+			_is_heavy = false
+			_use_stamina(LIGHT_STAMINA_COST)
+			_attack_state = AttackState.STARTUP
+			_attack_timer = STARTUP_TIME
+			Audio.play_swing_light()
+	if event.is_action_pressed("heavy_attack") and _attack_state == AttackState.IDLE and not _dodging:
+		if stamina >= HEAVY_STAMINA_COST:
+			_is_heavy = true
+			_use_stamina(HEAVY_STAMINA_COST)
+			_attack_state = AttackState.STARTUP
+			_attack_timer = HEAVY_STARTUP
+			Audio.play_swing_heavy()
 
 func _start_dodge() -> void:
 	var input_dir := Vector2(
@@ -103,6 +122,7 @@ func _start_dodge() -> void:
 	_attack_state = AttackState.IDLE
 	_hitbox_mesh.visible = false
 	_use_stamina(dodge_stamina_cost)
+	Audio.play_dodge()
 	_dodging = true
 	_dodge_timer = DODGE_DURATION
 	_iframes_timer = DODGE_DURATION
@@ -188,17 +208,21 @@ func _tick_attack(delta: float) -> void:
 	match _attack_state:
 		AttackState.STARTUP:
 			_attack_state = AttackState.ACTIVE
-			_attack_timer = ACTIVE_TIME
+			_attack_timer = HEAVY_ACTIVE if _is_heavy else ACTIVE_TIME
 			_hitbox_mesh.visible = true
+			if _is_heavy:
+				Effects.zoom_punch(2.0)
 			_do_attack()
 		AttackState.ACTIVE:
 			_attack_state = AttackState.RECOVERY
-			_attack_timer = RECOVERY_TIME
+			_attack_timer = HEAVY_RECOVERY if _is_heavy else RECOVERY_TIME
 			_hitbox_mesh.visible = false
 		AttackState.RECOVERY:
 			_attack_state = AttackState.IDLE
 
 func _do_attack() -> void:
+	var damage := 2 if _is_heavy else 1
+	var knock_mult := 2.0 if _is_heavy else 1.0
 	var space := get_world_3d().direct_space_state
 	var query := PhysicsShapeQueryParameters3D.new()
 	query.shape = _hitbox_shape.shape
@@ -210,8 +234,11 @@ func _do_attack() -> void:
 		if body == null or not body.is_in_group("enemy"):
 			continue
 		if body.has_method("take_damage"):
+			if _is_heavy:
+				Effects.hitstop(0.15)
+				Effects.screenshake(0.25)
 			var knock_dir := (body.global_position - global_position).normalized()
-			body.call("take_damage", 1, knock_dir)
+			body.call("take_damage", damage, knock_dir, knock_mult)
 
 func _rotate_toward_mouse() -> void:
 	var camera := get_viewport().get_camera_3d()
