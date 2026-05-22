@@ -47,7 +47,6 @@ var _spawn_position: Vector3
 
 @onready var _hitbox: Area3D = $AttackHitbox
 @onready var _hitbox_shape: CollisionShape3D = $AttackHitbox/CollisionShape3D
-@onready var _hitbox_mesh: MeshInstance3D = $AttackHitbox/DebugMesh
 
 func _ready() -> void:
 	add_to_group("player")
@@ -78,7 +77,6 @@ func _respawn() -> void:
 	_dodging = false
 	_sprinting = false
 	_attack_state = AttackState.IDLE
-	_hitbox_mesh.visible = false
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("dodge") and _dodge_cooldown <= 0.0 and not _dodging:
@@ -109,7 +107,6 @@ func _start_dodge() -> void:
 	else:
 		_dodge_dir = transform.basis.z.normalized()
 	_attack_state = AttackState.IDLE
-	_hitbox_mesh.visible = false
 	_use_stamina(dodge_stamina_cost)
 	Audio.play_dodge()
 	_dodging = true
@@ -204,14 +201,12 @@ func _tick_attack(delta: float) -> void:
 		AttackState.STARTUP:
 			_attack_state = AttackState.ACTIVE
 			_attack_timer = HEAVY_ACTIVE if _is_heavy else ACTIVE_TIME
-			_hitbox_mesh.visible = true
 			if _is_heavy:
 				Effects.zoom_punch(2.0)
 			_do_attack()
 		AttackState.ACTIVE:
 			_attack_state = AttackState.RECOVERY
 			_attack_timer = HEAVY_RECOVERY if _is_heavy else RECOVERY_TIME
-			_hitbox_mesh.visible = false
 		AttackState.RECOVERY:
 			_attack_state = AttackState.IDLE
 

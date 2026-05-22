@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://hfqdph5pjyg4" path="res://scripts/camera_follow.gd" id="2"]
 [ext_resource type="PackedScene" uid="uid://ca0yywxiai6wu" path="res://Characters/Assassin/assassin.glb" id="2_tefeu"]
 [ext_resource type="Script" uid="uid://dte71e8bbv3wf" path="res://scripts/enemy.gd" id="3"]
+[ext_resource type="ArrayMesh" uid="uid://brcnxkna4gxx5" path="res://Weapons/daggeroneofone.obj" id="3_o6xl0"]
 [ext_resource type="Script" uid="uid://c3fxutou6vanx" path="res://scripts/hud.gd" id="4"]
 [ext_resource type="Script" uid="uid://c61sliio7p3bt" path="res://scripts/ranged_enemy.gd" id="5"]
 
@@ -19,9 +20,11 @@ size = Vector3(18, 0.5, 18)
 size = Vector3(18, 0.5, 18)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.3
+height = 2.4
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2"]
-size = Vector3(0.8, 0.6, 0.5)
+size = Vector3(0.9, 0.5, 0.45)
 
 [sub_resource type="BoxMesh" id="BoxMesh_2"]
 size = Vector3(0.8, 0.6, 0.5)
@@ -76,8 +79,6 @@ shadow_enabled = true
 
 [node name="DirectionalLight3D2" type="DirectionalLight3D" parent="." unique_id=943101577]
 transform = Transform3D(-1, 0, 0, 0, 0.7071, 0.7071, 0, 0.7071, -0.7071, 0, 10, 0)
-light_energy = 1.0
-shadow_enabled = false
 
 [node name="Ground" type="StaticBody3D" parent="." unique_id=1227364988]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
@@ -110,7 +111,7 @@ mesh = SubResource("BoxMesh_2")
 [node name="assassin" parent="Player" unique_id=1283826430 instance=ExtResource("2_tefeu")]
 transform = Transform3D(-50, 0, -4.371139e-06, 0, 50, 0, 4.371139e-06, 0, -50, 0, -1.5, 0)
 
-[node name="Skeleton3D" parent="Player/assassin/Armature" parent_id_path=PackedInt32Array(1283826430, 2053108629) index="0" unique_id=1876334420]
+[node name="Skeleton3D" parent="Player/assassin/Armature" parent_id_path=PackedInt32Array(1283826430, 739356460) index="0" unique_id=2054946175]
 bones/0/position = Vector3(0.014310749, -0.056931227, -1.8154755)
 bones/0/rotation = Quaternion(-0.66912633, -0.099475086, 0.09257135, 0.7306197)
 bones/1/rotation = Quaternion(0.22421262, 0.03785654, 0.004459464, 0.9737946)
@@ -141,11 +142,23 @@ bones/29/rotation = Quaternion(-0.29414758, 0.051531762, 0.065758035, 0.95210165
 bones/30/rotation = Quaternion(0.58910847, 0.22901888, 0.020307643, 0.7746542)
 bones/31/rotation = Quaternion(0.33776194, -0.018369623, 0.016716756, 0.94090384)
 
-[node name="Skeleton3D" parent="Player/assassin/Armature_001" parent_id_path=PackedInt32Array(1283826430, 1831100528) index="0" unique_id=1068473453]
-bones/7/rotation = Quaternion(0.49506387, 0.5048784, -0.49454042, 0.5054101)
-bones/11/rotation = Quaternion(-0.08831285, 0.012288661, -0.1372734, 0.98651206)
-bones/15/rotation = Quaternion(0.49408305, -0.50587547, 0.49562418, 0.5043101)
-bones/29/rotation = Quaternion(-0.02191064, -0.0014142332, 0.064475805, 0.99767774)
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="Player/assassin/Armature/Skeleton3D" index="1" unique_id=737329190]
+transform = Transform3D(-0.14803454, 0.48566654, 0.86151826, 0.33551615, 0.84411657, -0.41820502, -0.9303302, 0.22714448, -0.2879074, -0.6265832, 1.3028185, -2.122342)
+bone_name = "mixamorig_RightHand"
+bone_idx = 18
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Player/assassin/Armature/Skeleton3D/BoneAttachment3D" unique_id=1128315753]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = ExtResource("3_o6xl0")
+
+[node name="BoneAttachment3D2" type="BoneAttachment3D" parent="Player/assassin/Armature/Skeleton3D" index="2" unique_id=1658427188]
+transform = Transform3D(0.12882654, -0.63621163, -0.7606823, -0.7024788, 0.48287576, -0.5228322, 0.6999473, 0.60171795, -0.3847183, 0.38679102, 1.1445243, -1.9218168)
+bone_name = "mixamorig_LeftHand"
+bone_idx = 10
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Player/assassin/Armature/Skeleton3D/BoneAttachment3D2" unique_id=296715707]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = ExtResource("3_o6xl0")
 
 [node name="Enemy" type="CharacterBody3D" parent="." unique_id=200000001 groups=["enemy"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -4)
