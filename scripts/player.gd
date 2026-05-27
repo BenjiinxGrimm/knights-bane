@@ -44,6 +44,8 @@ var _sprinting: bool = false
 var _stamina_regen_timer: float = 0.0
 var _is_heavy: bool = false
 var _spawn_position: Vector3
+var _grabbed: bool = false
+var _grab_timer: float = 0.0
 
 @onready var _hitbox: Area3D = $AttackHitbox
 @onready var _hitbox_shape: CollisionShape3D = $AttackHitbox/CollisionShape3D
@@ -53,6 +55,10 @@ func _ready() -> void:
 	hp = max_hp
 	stamina = max_stamina
 	_spawn_position = global_position
+
+func grab(duration: float) -> void:
+	_grabbed = true
+	_grab_timer = duration
 
 func take_damage(amount: int) -> void:
 	if _iframes_timer > 0.0:
@@ -77,8 +83,12 @@ func _respawn() -> void:
 	_dodging = false
 	_sprinting = false
 	_attack_state = AttackState.IDLE
+	_grabbed = false
+	_grab_timer = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _grabbed:
+		return
 	if event.is_action_pressed("dodge") and _dodge_cooldown <= 0.0 and not _dodging:
 		if _attack_state != AttackState.ACTIVE and stamina >= dodge_stamina_cost:
 			_start_dodge()
@@ -120,7 +130,10 @@ func _physics_process(delta: float) -> void:
 	_tick_timers(delta)
 	_update_animation()
 
-	if _dodging:
+	if _grabbed:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	elif _dodging:
 		velocity.x = _dodge_dir.x * DODGE_SPEED
 		velocity.z = _dodge_dir.z * DODGE_SPEED
 	else:
@@ -190,6 +203,10 @@ func _tick_dodge(delta: float) -> void:
 func _tick_timers(delta: float) -> void:
 	if _iframes_timer > 0.0:
 		_iframes_timer -= delta
+	if _grab_timer > 0.0:
+		_grab_timer -= delta
+		if _grab_timer <= 0.0:
+			_grabbed = false
 
 func _tick_attack(delta: float) -> void:
 	if _attack_state == AttackState.IDLE:
